@@ -8,6 +8,12 @@
 // openssl libraries
 #include <openssl/bio.h>
 #include <openssl/evp.h>
+#include <openssl/buffer.h>
+#include <openssl/hmac.h>
+#include <openssl/sha.h>
+#include <openssl/md2.h>
+#include <openssl/md4.h>
+#include <openssl/md5.h>
 
 using namespace std;
 
@@ -29,6 +35,8 @@ void help() {
 	printf("\thasher -h : for help \n");
 	printf("\thasher -a <string> : to calculate all type of listed hashes \n");
 	printf("\thasher -md5 <string> : to calculate md5 digest \n");
+	printf("\thasher -md4 <string> : to calculate md4 digest \n");
+	printf("\thasher -md2 <string> : to calculate md2 digest \n");
 	printf("\thasher -b64 <string> : to calculate both base64 encoded & decoded string \n");
 	printf("\thasher -b64E <string> : to calculate base64 encoded string \n");
 	printf("\thasher -b64D <string> : to calculate base64 decoded string \n");
@@ -37,22 +45,57 @@ void help() {
 	printf("\tExample: hasher -md5 hector\n");
 }
 
-/**
- * Fucntion to calculate and print the md5 digest of the input string
- *
- * @todo - later shift this to use openssl library rather than running
- * system command ...
- */
+// Function to calculate and print the md5 digest of the input string
 void md5(char s[]) {
-	char command[100];
-	int x = sprintf(command, "md5 -s \"%s\"", s);
-	system(command);
+	int length = strlen(s);
+	unsigned char digest[16];
+    MD5_CTX ctx;
+    MD5_Init(&ctx);
+    MD5_Update(&ctx, s, length);
+    MD5_Final(digest, &ctx);
+ 
+    char mdString[33];
+    for (int i = 0; i < 16; i++)
+        sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
+ 
+    printf("md5: %s\n", mdString);
 }
 
-// Fucntion to calculate and print the base64 encoded string
+// Function to calculate and print the md5 digest of the input string
+void md4(char s[]) {
+	int length = strlen(s);
+	unsigned char digest[16];
+    MD4_CTX ctx;
+    MD4_Init(&ctx);
+    MD4_Update(&ctx, s, length);
+    MD4_Final(digest, &ctx);
+ 
+    char mdString[33];
+    for (int i = 0; i < 16; i++)
+        sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
+ 
+    printf("md4: %s\n", mdString);
+}
+
+// Function to calculate and print the md5 digest of the input string
+void md2(char s[]) {
+	int length = strlen(s);
+	unsigned char digest[16];
+    MD2_CTX ctx;
+    MD2_Init(&ctx);
+    MD2_Update(&ctx, (const unsigned char *)s, length);
+    MD2_Final(digest, &ctx);
+ 
+    char mdString[33];
+    for (int i = 0; i < 16; i++)
+        sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
+ 
+    printf("md2: %s\n", mdString);
+}
+
+// Function to calculate and print the base64 encoded string
 void base64Encode(char s[]) {
 	printf("base64 encode: ");
-
 	BIO *bio, *b64;
 	b64 = BIO_new(BIO_f_base64());
 	bio = BIO_new_fp(stdout, BIO_NOCLOSE);
@@ -60,21 +103,27 @@ void base64Encode(char s[]) {
 	BIO_write(b64, s, strlen(s));
 	BIO_flush(b64);
 	BIO_free_all(b64);
-	NEWLINE;
 }
 
 /**
- * Fucntion to calculate and print the base64 decoded string
+ * Function to calculate and print the base64 decoded string
  *
- * @todo - later shift this to use openssl library rather than running
- * system command ...
+ * @todo - make it working with base64 values, currently showing bogus result
  */
 void base64Decode(char s[]) {
-	char command[100];
-	int x = sprintf(command, "echo \"%s\" | base64 -D", s);
+	int length = strlen(s);
 	printf("base64 decode: ");
-	system(command);
-	NEWLINE;
+
+	BIO *b64, *bmem;
+	char buffer[length];
+
+	b64 = BIO_new(BIO_f_base64());
+	bmem = BIO_new_mem_buf(s, length);
+	bmem = BIO_push(b64, bmem);
+
+	BIO_read(bmem, buffer, length);
+	BIO_free_all(bmem);
+	printf("%s\n", buffer);
 }
 
 // ---- Declare Global Variables from here
@@ -84,7 +133,6 @@ void base64Decode(char s[]) {
  * Main()
  */
 int main(int argc, char *argv[]) {
-
 	if (argc != 3) {
 		// Means incorrect approach
 		help();
@@ -94,6 +142,10 @@ int main(int argc, char *argv[]) {
 	if (!strcmp(argv[1],"-md5")) {
 		// For md5 digest
 		md5(argv[2]);
+	} else if (!strcmp(argv[1],"-md4")) {
+		md4(argv[2]);
+	} else if (!strcmp(argv[1],"-md2")) {
+		md2(argv[2]);
 	} else if (!strcmp(argv[1],"-b64")) {
 
 		// For both base64 encode & decode
@@ -111,9 +163,13 @@ int main(int argc, char *argv[]) {
 	} else if (!strcmp(argv[1],"-a")) {
 		// -- call each functions one by one!
 		md5(argv[2]);
+		md4(argv[2]);
+		md2(argv[2]);
 		base64Encode(argv[2]);
 		base64Decode(argv[2]);
 
+	} else {
+		help();
 	}
 	return 0;
 }
