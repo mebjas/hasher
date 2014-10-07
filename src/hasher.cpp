@@ -40,7 +40,9 @@ void help() {
 	printf("\thasher -b64 <string> : to calculate both base64 encoded & decoded string \n");
 	printf("\thasher -b64E <string> : to calculate base64 encoded string \n");
 	printf("\thasher -b64D <string> : to calculate base64 decoded string \n");
-
+	printf("\thasher -sha1 <string> : to calculate sha1 of the string \n");
+	printf("\thasher -sha256 <string> : to calculate sah256 of the string \n");
+	printf("\thasher -sha512 <string> : to calculate sha512 of the string \n");
 	// -- examples
 	printf("\tExample: hasher -md5 hector\n");
 }
@@ -93,6 +95,55 @@ void md2(char s[]) {
     printf("md2: %s\n", mdString);
 }
 
+// Function to compute sha-1 hash of the given string
+void sha1(char s[]) {
+	int len = strlen(s);
+	unsigned char digest[20];
+	SHA_CTX ctx;
+	SHA1_Init(&ctx);
+	SHA1_Update(&ctx, (const unsigned char *)s, len);
+	SHA1_Final(digest, &ctx);
+
+	char shaString[41];
+    for (int i = 0; i < 20; i++)
+        sprintf(&shaString[i*2], "%02x", (unsigned int)digest[i]);
+
+	printf("SHA-1: %s\n", shaString);
+}
+
+// Function to compute sha256 hash of the given string
+void sha256(char s[]) {
+	int len = strlen(s);
+	unsigned char digest[32];
+	SHA256_CTX ctx;
+	SHA256_Init(&ctx);
+	SHA256_Update(&ctx, (const unsigned char *)s, len);
+	SHA256_Final(digest, &ctx);
+
+	char shaString[65];
+    for (int i = 0; i < 32; i++)
+        sprintf(&shaString[i*2], "%02x", (unsigned int)digest[i]);
+
+	printf("SHA256: %s\n", shaString);
+}
+
+// Function to compute sha256 hash of the given string
+void sha512(char s[]) {
+	int len = strlen(s);
+	unsigned char digest[64];
+	SHA512_CTX ctx;
+	SHA512_Init(&ctx);
+	SHA512_Update(&ctx, (const unsigned char *)s, len);
+	SHA512_Final(digest, &ctx);
+
+	char shaString[128];
+    for (int i = 0; i < 64; i++)
+        sprintf(&shaString[i*2], "%02x", (unsigned int)digest[i]);
+
+	printf("SHA512: %s\n", shaString);
+}
+
+
 // Function to calculate and print the base64 encoded string
 void base64Encode(char s[]) {
 	printf("base64 encode: ");
@@ -123,6 +174,7 @@ void base64Decode(char s[]) {
 
 	BIO_read(bmem, buffer, length);
 	BIO_free_all(bmem);
+
 	printf("%s\n", buffer);
 }
 
@@ -139,34 +191,50 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	if (!strcmp(argv[1],"-md5")) {
+	if (!strcmp(argv[1], "-md5")) {
 		// For md5 digest
 		md5(argv[2]);
-	} else if (!strcmp(argv[1],"-md4")) {
+	} else if (!strcmp(argv[1], "-md4")) {
 		md4(argv[2]);
-	} else if (!strcmp(argv[1],"-md2")) {
+	} else if (!strcmp(argv[1], "-md2")) {
 		md2(argv[2]);
-	} else if (!strcmp(argv[1],"-b64")) {
+	} else if (!strcmp(argv[1], "-b64")) {
 
 		// For both base64 encode & decode
 		base64Encode(argv[2]);
 		base64Decode(argv[2]);
 
-	} else if (!strcmp(argv[1],"-b64E")) {
+	} else if (!strcmp(argv[1], "-b64E")) {
 		// For base 64 encode
 		base64Encode(argv[2]);
 
-	} else if (!strcmp(argv[1],"-b64D")) {
+	} else if (!strcmp(argv[1], "-b64D")) {
 		// for base 64 decode
 		base64Decode(argv[2]);
 
-	} else if (!strcmp(argv[1],"-a")) {
+	} else if (!strcmp(argv[1], "-sha1")) {
+		// for base sha1
+		sha1(argv[2]);
+
+	} else if (!strcmp(argv[1], "-sha256")) {
+		// for base sha 256
+		sha256(argv[2]);
+
+	} else if (!strcmp(argv[1], "-sha512")) {
+		// for sha 512
+		sha512(argv[2]);
+
+	}  else if (!strcmp(argv[1], "-a")) {
 		// -- call each functions one by one!
 		md5(argv[2]);
 		md4(argv[2]);
 		md2(argv[2]);
 		base64Encode(argv[2]);
 		base64Decode(argv[2]);
+
+		sha1(argv[2]);
+		sha256(argv[2]);
+		sha512(argv[2]);
 
 	} else {
 		help();
